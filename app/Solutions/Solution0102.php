@@ -4,6 +4,8 @@ namespace Alddesign\EzMvc\Solutions;
 
 class Solution0102 extends Solution
 {
+    public $ready = true;
+    
     public function run()
     {
         set_time_limit(0);
@@ -223,7 +225,9 @@ class Solution0102 extends Solution
                    {
                        $result = $i1 * $i2 * $i3;
                        $duration =  microtime(true) - $start;
-                       echo "$i1 + $i2 + $i3 = 2020. Result $i1 * $i2 * $i3 = $result ... took $duration sec.";
+                       echo "The numbers are: $i1 + $i2 + $i3 = 2020. <br>";
+                       echo "Result $i1 * $i2 * $i3 = <b>$result</b><br>";
+                       echo "<small> took $duration sec.<small>";
                        return;
                    }
                }

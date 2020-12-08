@@ -6,8 +6,9 @@ use Alddesign\EzMvc\System\View;
 ?>
 
 <?php View::createChild("html-header", $this)->render(); ?> 
-    <h2><?php echo sprintf('Advent of Code solution for day %s part %s', $solution->day, $solution->part); ?></h2>
-    <div>
-        <?php $solution->run(); ?>
+    <div class="container-fluid">
+        <h3>
+            <?php $solution->run(); ?>
+        </h3>
     </div>
-<?php View::createChild("html-footer", $this, ["footerText" => "Copyright by me..."])->render(); ?> 
+<?php View::createChild("html-footer", $this, false, ["footerText" => "Copyright by me..."])->render(); ?> 

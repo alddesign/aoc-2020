@@ -4,6 +4,8 @@ namespace Alddesign\EzMvc\Solutions;
 
 class Solution0201 extends Solution
 {
+    public $ready = true;
+    
     public function run()
     {
         set_time_limit(0);
@@ -1022,7 +1024,7 @@ class Solution0201 extends Solution
                 $correct += 1;
             }
         }
-        echo "<b>Found $correct correct passwords (in a total of $total)!</b>";
+        echo "Found <b>$correct</b> correct passwords (in a total of $total).";
     }
 }
 

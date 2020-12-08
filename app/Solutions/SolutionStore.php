@@ -9,10 +9,14 @@ class SolutionStore
     public function __construct()
     {
         $this
-        ->addSolution(new Solution0101(1,1))
-        ->addSolution(new Solution0102(1,2))
-        ->addSolution(new Solution0201(2,1))
-        ->addSolution(new Solution0202(2,2))
+        ->addSolution(new Solution0101())
+        ->addSolution(new Solution0102())
+        ->addSolution(new Solution0201())
+        ->addSolution(new Solution0202())
+        ->addSolution(new Solution0301())
+        ->addSolution(new Solution0302())
+        ->addSolution(new Solution0401())
+        ->addSolution(new Solution0402())
         ;
     }
 
@@ -31,6 +35,16 @@ class SolutionStore
     public function getSolution(int $day, int $part)
     {
         return $this->solutions[$day][$part];
+    }
+
+    /**
+     * @param int $day
+     * 
+     * @return Solution[]
+     */
+    public function getSolutionsForDay(int $day)
+    {
+        return isset($this->solutions[$day]) ? $this->solutions[$day] : [];
     }
 
     /**

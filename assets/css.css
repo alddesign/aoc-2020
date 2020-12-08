@@ -1,4 +1,14 @@
-body
+#calendar-wrapper
 {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 0 20px;
+}
+
+td.day
+{
+    height: 100px;
+}
+
+td.not-december
+{
+   background: linear-gradient(to bottom,#e8e8e8 0,#f5f5f5 100%);
 }

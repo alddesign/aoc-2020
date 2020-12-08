@@ -76,8 +76,9 @@ class View
      * 
      * @return View
      */
-    public static function createChild(string $name, $parentView, array $data = [])
+    public static function createChild(string $name, View $parentView, bool $inheritData = true, array $data = [])
     {
+        $data = $inheritData ? $parentView->data : $data;
         $view = new View($name, $data);
 
         $view->isRootView = false;
