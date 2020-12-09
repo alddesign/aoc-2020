@@ -19,6 +19,10 @@ class SolutionStore
         ->addSolution(new Solution0402())
         ->addSolution(new Solution0501())
         ->addSolution(new Solution0502())
+        ->addSolution(new Solution0601())
+        ->addSolution(new Solution0602())
+        ->addSolution(new Solution0701())
+        ->addSolution(new Solution0702())
         ;
     }
 

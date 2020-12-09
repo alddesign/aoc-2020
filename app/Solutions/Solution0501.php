@@ -908,6 +908,6 @@ class Solution0501 extends Solution
         sort($seatIds);
         $highestSeatId = $seatIds[count($seatIds)-1];
         
-        echo "Highest seatId is $highestSeatId";
+        echo "Highest seatId is <b>$highestSeatId<b>";
     }
 }
