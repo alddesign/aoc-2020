@@ -17,6 +17,8 @@ class SolutionStore
         ->addSolution(new Solution0302())
         ->addSolution(new Solution0401())
         ->addSolution(new Solution0402())
+        ->addSolution(new Solution0501())
+        ->addSolution(new Solution0502())
         ;
     }
 
