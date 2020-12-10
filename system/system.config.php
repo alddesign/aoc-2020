@@ -7,7 +7,7 @@
  */
 $GLOBALS["_EZMVC_SYS_CONFIG"] =
 [
-    "app-name" => "Sample App",                 //The name of your app
+    "app-name" => "AoC 2020",                 //The name of your app
     "base-url" => "http://localhost/aoc-2020",    //Them url pointing to the root directory of EZ-MVC (where the index.php is located)
     "default-controller" => "Solution",             //The default controller when none is specified
     "default-action" => "list",                //The default action when none is specified

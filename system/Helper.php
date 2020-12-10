@@ -16,112 +16,106 @@ abstract class Helper
 	 * 
 	 * @param mixed $value The variable to print out
 	 * @param bool $dontDie Default = false. If set to true the script will not be aborted after execution of this function.
+	 * @param bool $initCall dont change diz
 	 * @return void
 	 */
-	public static function xout($value, bool $dontDie = false)
+	public static function xout($value, bool $dontDie = false, bool $initCall = true)
 	{
-		if(!function_exists('Alddesign\EzMvc\System\xout_'))
+		//You can define your own syntax coloring here.
+		$baseColor = 'black';
+		$objectClassColor = 'gray';
+		$arrayTypeColor = 'blue';
+		$objectTypeColor = 'blue';
+		$stringTypeColor = 'red';
+		$integerTypeColor = 'orange';
+		$doubleTypeColor = 'teal';
+		$resourceTypeColor = 'purple';
+		$resourceClosedTypeColor = 'plum';
+		$booleanTypeColor = 'green';
+		$nullTypeColor = 'gray';
+	
+		$result = $initCall ? '<div id="xout-container" style="font-family: Courier New; font-weight: bold; font-size: 15px; color:'.$baseColor.';">' : '';
+	
+		$isSimpleVar = false;
+		$valueType = gettype($value);
+		switch($valueType)
 		{
-			function xout_($value, bool $dontDie, bool $initCall)
+			case 'array' : $result .= '<span>ARRAY</span><br />'.htmlspecialchars('['); break;
+			case 'object' : $result .= '<span>OBJECT</span> <span style="color:'.$objectClassColor.';">' . get_class($value) . '</span><br />'.htmlspecialchars('('); break;
+			default : $value = [$value]; $isSimpleVar = true; break;
+		}
+	
+		$result .= '<ul style="list-style-type: none; margin: 0;">';
+	
+		foreach ($value as $key => $val)
+		{
+			$valType = gettype($val);
+			if ($valType === 'array' || $valType === 'object')
 			{
-				//You can define you colors here (CSS value):
-				$baseColor = 'black';
-				$objectClassColor = 'teal';
-				$arrayTypeColor = 'blue';
-				$objectTypeColor = 'blue';
-				$stringTypeColor = 'red';
-				$integerTypeColor = 'orange';
-				$doubleTypeColor = 'teal';
-				$resourceTypeColor = 'black';
-				$booleanTypeColor = 'green';
-				$nullTypeColor = 'gray';
-
-				$result = $initCall ? '<div id="xout-container" style="font-family: Courier New; font-weight: bold; font-size: 15px; color:'.$baseColor.';">' : '';
-
-				$isSimpleVar = false;
-				$valueType = gettype($value);
-				switch($valueType)
+				if ($valueType === 'array')
 				{
-					case 'array' : $result .= '<span>ARRAY</span><br />'.htmlspecialchars('['); break;
-					case 'object' : $result .= '<span>OBJECT</span> <span style="color:'.$objectClassColor.';">' . get_class($value) . '</span><br />'.htmlspecialchars('('); break;
-					default : $value = [$value]; $isSimpleVar = true; break;
+					$result .= '<li><span style="color:'.$arrayTypeColor.';">[' . htmlspecialchars(strval($key)) . ']</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('=>').' </b><span>' . self::xout($val, $dontDie, false) . '</span></li>';
 				}
-				
-				$result .= '<ul style="list-style-type: none; margin: 0;">';
-				
-				foreach ($value as $key => $val)
+				if ($valueType === 'object')
 				{
-					$valType = gettype($val);
-					if ($valType === 'array' || $valType === 'object')
-					{
-						if ($valueType === 'array')
-						{
-							$result .= '<li><span style="color:'.$arrayTypeColor.';">[' . htmlspecialchars(strval($key)) . ']</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('=>').' </b><span>' . xout_($val, $dontDie, false) . '</span></li>';
-						}
-						if ($valueType === 'object')
-						{
-							$result .= '<li><span style="color:'.$objectTypeColor.';">' . htmlspecialchars(strval($key)) . '</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('->').' </b><span>' . xout_($val, $dontDie, false) . '</span></li>';
-						}
-					}
-					else
-					{
-						$color = 'black';
-						switch($valType)
-						{
-							case 'string' : $color = $stringTypeColor; $val = htmlspecialchars('\'').$val.htmlspecialchars('\''); break;
-							case 'integer' : $color = $integerTypeColor; break;
-							case 'double' : $color = $doubleTypeColor; break;
-							case 'resource' : $color = $resourceTypeColor; break;
-							case 'resource (closed)' : $color = $resourceTypeColor; break;
-							case 'boolean' : $color = $booleanTypeColor; $val = ($val === true) ? 'TRUE' : 'FALSE'; break;
-							case 'NULL' : $color = $nullTypeColor; $val = 'NULL'; break;
-						}
-							
-						$result .= '<li>';
-						if(!$isSimpleVar)
-						{
-							if($valueType === 'array')
-							{
-								$result .= '<span style="color:'.$arrayTypeColor.';">[' . htmlspecialchars(strval($key)) . ']</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('=>').' </b>';
-							}
-							if($valueType === 'object')
-							{
-								$result .= '<span style="color:'.$objectTypeColor.';">' . htmlspecialchars(strval($key)) . '</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('->').' </b>';
-							}
-						}
-						$result .= '<span style="color:'.$color.';">' . htmlspecialchars(strval($val)) . '</span></li>';
-					}
-				}
-				
-				$result .= '</ul>';
-				
-				if(!$isSimpleVar)
-				{
-					switch($valueType)
-					{
-						case 'array' : $result .= htmlspecialchars(']'); break;
-						case 'object' : $result .= htmlspecialchars(')'); break;
-					}
-				}
-				
-				$result .= $initCall ? '</div>' : '';
-				
-				if($initCall) //Finished
-				{
-					echo($result);
-					if(!$dontDie)
-					{
-						die();
-					}
-				}
-				else //End of recursive call
-				{
-					return $result; 
+					$result .= '<li><span style="color:'.$objectTypeColor.';">' . htmlspecialchars(strval($key)) . '</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('->').' </b><span>' . self::xout($val, $dontDie, false) . '</span></li>';
 				}
 			}
+			else
+			{
+				$color = 'black';
+				switch($valType)
+				{
+					case 'string' : $color = $stringTypeColor; $val = htmlspecialchars('\'').$val.htmlspecialchars('\''); break;
+					case 'integer' : $color = $integerTypeColor; $val = strval($val); break;
+					case 'double' : $color = $doubleTypeColor; $val = strval($val); break;
+					case 'resource' : $color = $resourceTypeColor; $val = 'resource ('.get_resource_type($val).')'; break;
+					case 'resource (closed)' : $color = $resourceClosedTypeColor; $val = 'resource (closed)'; break;
+					case 'boolean' : $color = $booleanTypeColor; $val = ($val === true) ? 'TRUE' : 'FALSE'; break;
+					case 'NULL' : $color = $nullTypeColor; $val = 'NULL'; break;
+				}
+	
+				$result .= '<li>';
+				if(!$isSimpleVar)
+				{
+					if($valueType === 'array')
+					{
+						$result .= '<span style="color:'.$arrayTypeColor.';">[' . htmlspecialchars(strval($key)) . ']</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('=>').' </b>';
+					}
+					if($valueType === 'object')
+					{
+						$result .= '<span style="color:'.$objectTypeColor.';">' . htmlspecialchars(strval($key)) . '</span><b style="color:'.$baseColor.';"> '.htmlspecialchars('->').' </b>';
+					}
+				}
+				$result .= '<span style="color:'.$color.';">' . htmlspecialchars($val) . '</span></li>';
+			}
 		}
-		//Lets go:
-		xout_($value, $dontDie, true);
+	
+		$result .= '</ul>';
+	
+		if(!$isSimpleVar)
+		{
+			switch($valueType)
+			{
+				case 'array' : $result .= htmlspecialchars(']'); break;
+				case 'object' : $result .= htmlspecialchars(')'); break;
+			}
+		}
+	
+		$result .= $initCall ? '</div>' : '';
+	
+		if($initCall) //Finished
+		{
+			echo($result);
+			if(!$dontDie)
+			{
+				die();
+			}
+		}
+		else //End of recursive call
+		{
+			return $result; 
+		}
 	}
 
 	/** 
