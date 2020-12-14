@@ -214,7 +214,6 @@ class Solution0102 extends Solution
            1637
         ];
        
-        $start = microtime(true);
         foreach($input as $i1)
         {
            foreach($input as $i2)
@@ -224,10 +223,8 @@ class Solution0102 extends Solution
                    if($i1 + $i2 + $i3 === 2020)
                    {
                        $result = $i1 * $i2 * $i3;
-                       $duration =  microtime(true) - $start;
                        echo "The numbers are: $i1 + $i2 + $i3 = 2020. <br>";
                        echo "Result $i1 * $i2 * $i3 = <b>$result</b><br>";
-                       echo "<small> took $duration sec.<small>";
                        return;
                    }
                }

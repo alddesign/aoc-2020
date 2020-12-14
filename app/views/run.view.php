@@ -6,9 +6,9 @@ use Alddesign\EzMvc\System\View;
 ?>
 
 <?php View::createChild("html-header", $this)->render(); ?> 
-    <div class="container-fluid">
-        <h3>
+    <div class="container-fluid" id="container">
+        <div id="content" class="h3">
             <?php $solution->run(); ?>
-        </h3>
+        </div>
     </div>
 <?php View::createChild("html-footer", $this, false, ["footerText" => "Copyright by me..."])->render(); ?> 

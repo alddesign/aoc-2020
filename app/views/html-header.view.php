@@ -13,6 +13,8 @@ use Alddesign\EzMvc\System\Helper;
         
         <link rel="icon" href="<?php Helper::echoUrl("/assets/icon32.png") ?>" type="image/png" sizes="32x32">
 
+        <script src="<?php Helper::echoUrl("/assets/jquery.min.js") ?>"></script>
+
         <link rel="stylesheet" href="<?php Helper::echoUrl("/assets/bootstrap.min.css") ?>">
         <link rel="stylesheet" href="<?php Helper::echoUrl("/assets/bootstrap-theme.min.css") ?>">
         <link rel="stylesheet" href="<?php Helper::echoUrl("/assets/css.css") ?>">
