@@ -9,12 +9,13 @@ var lx = 0;
 var ly = 0;
 var lz = 0;
 var testCube;
-var animationId = null;
+var animationId;
 var stepNo = 6;
 var rotationSpeed = 0.0004;
 var fps = 60;
 var w = 0;
 var h = 0;
+var canvas;
 
 $(document).ready(function()
 {
@@ -23,7 +24,7 @@ $(document).ready(function()
 	})();
 	
 	var content = $('#content');
-	var canvas;
+
 	w = window.innerWidth - 32;
 	h = window.innerHeight - 200;
 
@@ -84,7 +85,6 @@ $(document).ready(function()
 
 		testCube = createCube((lx-1)/2, (-ly+1)/2, (lz-1) / 2, 0xcc3333);
 		scene.add(testCube);
-
 	}
 
 	function createCube(x,y,z,color) 
@@ -116,7 +116,6 @@ $(document).ready(function()
 	{
 		setTimeout( function() {animationId = requestAnimationFrame(animateScene);}, 1000 / fps );
 
-		
 		var speed = Date.now() * rotationSpeed;
 		camera.position.x = Math.cos(speed) * cameraPos.z + cameraLookAt.x;
 		camera.position.z = Math.sin(speed) * cameraPos.z + cameraLookAt.z;
@@ -131,7 +130,12 @@ $(document).ready(function()
 		if(animationId)
 		{
 			cancelAnimationFrame(animationId);
-			animationId = null;
+			animationId = undefined;
+			render.dispose();
+			render = undefined;
+			scene = undefined;
+			camera = undefined;
+			light = undefined;
 
 			$('#canvas').remove();
 		}
@@ -172,6 +176,5 @@ $(document).ready(function()
 	}
 
 	initGui();
-	start(stepNo);	
-
+	start(stepNo);
 });
