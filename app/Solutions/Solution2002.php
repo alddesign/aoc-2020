@@ -3,6 +3,7 @@ declare(strict_types = 1);
 namespace Alddesign\EzMvc\Solutions;
 
 use Alddesign\EzMvc\System\Helper;
+use Exception;
 
 class Solution2002 extends Solution
 {
@@ -1705,245 +1706,218 @@ class Solution2002 extends Solution
 	{
 		set_time_limit(0);
 		
-		//Parse input
-		$id = 0;
-		/** @var Tile2[] $tiles */
-		$tiles = [];
-		foreach($this::INPUT as $line)
-		{
-			$tilepos = strpos($line, 'Tile');
-			if($tilepos !== false)
-			{
-				$id = intval(substr($line, 5, strlen($line)-2));
-				$tiles[$id] = new Tile2($id);
-			}
-			else
-			{
-				$tiles[$id]->addDataLine($line);
-			}
-		}
+		//Create the tile helper and caluclate the whole image
+		$tileHelper = new TileHelper($this::INPUT);
+		$image = $tileHelper->buildImage();
 
-		$tileHelper = new TileHelper2($tiles);
-		$tileHelper->createImage();
+		$imageProcessor = new ImageProcessor($image);
+		$monsters = $imageProcessor->countMonsters();
+
+		$roughness = $imageProcessor->countRoughness($monsters);
+
+		echo "The roughness ist <b>$roughness</b><br>";
+		echo "<small>An there are $monsters sea monsters - watch out!</small>";
+
+		//Show them sea fuckers:
+		$imageProcessor->print(false);
+
 	}
 }
 
-class TileHelper2
+class ImageProcessor
 {
-	/** @var Tile2[] $tiles */
-	public $tiles = [];
-
-	/** @var Tile2[][] $image */
-	public $image = [[]];
-
-	/** @param Tile2[] $tiles */
-	public function __construct(array $tiles)
-	{
-		$this->tiles = $tiles;
+	/** @var string[] $image */
+	private $image = [];
+	private $hasBorders = true;
+	private $monsterPositions = [];
+	
+	/**
+	 * @param Tile[][] $image
+	 */
+	public function __construct(array $image)
+	{			
+		$image = 
+		$this->image = $this->createFlatImage($image, true);
 	}
 
-	/** @return Tile2[] */
-	public function createImage()
+	public function countRoughness()
 	{
-		//$cornerTiles = $this->findCornerTiles();
-		
-		//I cant wait forever so:
-		$cornerTiles = 
-		[
-			$this->tiles[1301],
-			$this->tiles[1373],
-			$this->tiles[3593],
-			$this->tiles[1289]
-		];
-		
-		//populate the corners
-		$this->image[0][0] = $cornerTiles[0];
-		$this->image[0][11] = $cornerTiles[1];  
-		$this->image[11][0] = $cornerTiles[2];  
-		$this->image[11][11] = $cornerTiles[3];  
-		//remove em from the tiles:
-		unset($this->tiles[$cornerTiles[0]->id]);
-		unset($this->tiles[$cornerTiles[1]->id]);
-		unset($this->tiles[$cornerTiles[2]->id]);
-		unset($this->tiles[$cornerTiles[3]->id]);
-
-		$compareBorder = 2; //right
-		$lastTile = $cornerTiles[0];
-		for($r = 0; $r < 12; $r++)
+		$max = count($this->image);
+		$total = 0;
+		for($r = 0; $r < $max; $r++)
 		{
-			for($c = 0; $c < 12; $c++)
+			for($c = 0; $c < $max; $c++)
 			{
-				if(!isset($this->image[$r][$c]))
-				{
-					/** @var Tile2 $lastTile */
-					$lastTile = $c === 0 ? $this->image[$r-1][0] : $this->image[$r][$c-1];
-					$compareBorder = $c === 0 ? 3 : 2;
-					
-					$found = false;
-					foreach($this->tiles as $id => $tile)
-					{
-						if($lastTile->connectsTo($tile, $compareBorder))
-						{
-							$this->image[$r][$c] = $tile;
-							unset($this->tiles[$id]);
-							$found = true;
-							break;
-						}
-					}
-					if(!$found)
-					{
-						$xxx = 1;
-					}
-				}
-			}			
-		}
-		
-		return $this->image;
-	}
-
-	/** @return Tile2[] */
-	public function findCornerTiles()
-	{
-		$ex = [];
-		$result = [];
-		foreach($this->tiles as $id1 => $t1)
-		{
-			if(!in_array($id1, $ex, true))
-			{
-				$connections = 0;
-				foreach($this->tiles as $id2 => $t2)
-				{
-					if($id1 !== $id2)
-					{
-						if($t1->connectsTo($t2) > 0)
-						{
-							$connections++;
-						}
-					}
-				}
-				if($connections === 2)
-				{
-					$result[] = $t1;
-					$ex[] = $t1->id;
-				}
+				$total += $this->image[$r][$c] === '#' ? 1 : 0;
 			}
 		}
 
-		return $result;
-	}
-}
-
-class Tile2
-{
-	public $data = [];
-	public $id = 0;
-
-	public function __construct(int $id)
-	{
-		$this->id = $id;
-		return $this;
-	}
-
-	public function addDataLine(string $dataLine)
-	{
-		$this->data[] = strval($dataLine);
-	}
-
-	public function flip()
-	{
-		$this->data = array_reverse($this->data);
-	}
-
-	public function rotateRight()
-	{
-		$d = $this->data;
-		for($l = 0; $l <= 9; $l++)
-		{
-			for($i = 0; $i <= 9; $i++)
-			{
-				$d[$l][$i] = $this->data[9-$i][$l];
-			}
-		}
-		$this->data = $d;
-	}
+		return $total;
+	} 
 
 	/** @return int */
-	public function connectsTo(Tile2 $tile, int $which = 0)
+	public function countMonsters(int $iteration = 0)
 	{
-		if($tile->id === $this->id)
+		if($iteration >= 8)
 		{
-			return 0;
+			throw new Exception('Cannot find monsters!');
 		}
 
-		$w = $which > 0 ? $which : 1;
-		$wmax = $which > 0 ? $which : 4;
-
-		for($w = $w; $w <= $wmax; $w++)
+		$max = count($this->image);
+		$found = 0;
+		for($r = 0; $r < $max; $r++)
 		{
-			if($w===1){$w1=3;}
-			if($w===2){$w1=4;}
-			if($w===3){$w1=1;}
-			if($w===4){$w1=2;}
-			
-			for($x = 0; $x < 4; $x++)
+			for($c = 0; $c < $max; $c++)
 			{
-				if($this->getBorder($w) === $tile->getBorder($w1))
+				if
+				(
+					isset($this->image[$r][$c]) && $this->image[$r][$c] === '#' &&
+					isset($this->image[$r+1][$c+1]) && $this->image[$r+1][$c+1] === '#' &&
+					isset($this->image[$r+1][$c]) && $this->image[$r+1][$c] === '#' &&
+					isset($this->image[$r+1][$c-1]) && $this->image[$r+1][$c-1] === '#' &&
+					isset($this->image[$r+1][$c-6]) && $this->image[$r+1][$c-6] === '#' &&
+					isset($this->image[$r+1][$c-7]) && $this->image[$r+1][$c-7] === '#' &&
+					isset($this->image[$r+1][$c-12]) && $this->image[$r+1][$c-12] === '#' &&
+					isset($this->image[$r+1][$c-13]) && $this->image[$r+1][$c-13] === '#' &&
+					isset($this->image[$r+1][$c-18]) && $this->image[$r+1][$c-18] === '#' &&
+					isset($this->image[$r+2][$c-2]) && $this->image[$r+2][$c-2] === '#' &&
+					isset($this->image[$r+2][$c-5]) && $this->image[$r+2][$c-5] === '#' &&
+					isset($this->image[$r+2][$c-8]) && $this->image[$r+2][$c-8] === '#' &&
+					isset($this->image[$r+2][$c-10]) && $this->image[$r+2][$c-11] === '#' &&
+					isset($this->image[$r+2][$c-14]) && $this->image[$r+2][$c-14] === '#' &&
+					isset($this->image[$r+2][$c-17]) && $this->image[$r+2][$c-17] === '#'
+				)
 				{
-					//$this->print();
-					//$tile->print(true);
-					return $w;
+					$found++;
+					
+					$this->image[$r][$c] = 'O';
+					$this->image[$r+1][$c+1] = 'O';
+					$this->image[$r+1][$c] = 'O';
+					$this->image[$r+1][$c-1] = 'O';
+					$this->image[$r+1][$c-6] = 'O';
+					$this->image[$r+1][$c-7] = 'O';
+					$this->image[$r+1][$c-12]  = 'O';
+					$this->image[$r+1][$c-13] = 'O';
+					$this->image[$r+1][$c-18] = 'O';
+					$this->image[$r+2][$c-2] = 'O';
+					$this->image[$r+2][$c-5] = 'O';
+					$this->image[$r+2][$c-8] = 'O';
+					$this->image[$r+2][$c-11] = 'O';
+					$this->image[$r+2][$c-14] = 'O';
+					$this->image[$r+2][$c-17]  = 'O';
 				}
-				$tile->rotateRight();
 			}
-			$tile->flip();
-
-			for($x = 0; $x < 4; $x++)
-			{
-				if($this->getBorder($w) === $tile->getBorder($w1))
-				{
-					//$this->print();
-					//$tile->print(true);
-					return $w;
-				}
-				$tile->rotateRight();
-			}
-			$tile->flip();
+		}
+		
+		if($found > 0)
+		{
+			return $found;	
 		}
 
-		return 0;
+		$this->rotateRight();
+		if($iteration === 3)
+		{
+			$this->flip();
+		}
+
+		return $this->countMonsters($iteration + 1);
 	}
 
-	/** @return string */
-	public function getBorder(int $side)
+	private function flip()
 	{
-		if($side === 1){ $l0 = 0; $l1 = 0; $i0 = 0; $i1 = 9; } //lt-rt
-		if($side === 2){ $l0 = 0; $l1 = 9; $i0 = 9; $i1 = 9; } //rt-rb
-		if($side === 3){ $l0 = 9; $l1 = 9; $i0 = 0; $i1 = 9; } //lb-rb
-		if($side === 4){ $l0 = 0; $l1 = 9; $i0 = 0; $i1 = 0; } //lt-lb
-		$b = '';
-		for($l = $l0; $l <= $l1; $l++)
+		$this->image = array_reverse($this->image);
+	}
+
+	private function rotateRight()
+	{
+		$d = $this->image;
+		$lmax = count($d);
+		for($l = 0; $l < $lmax; $l++)
 		{
-			for($i = $i0; $i <= $i1; $i++)
+			for($i = 0; $i < $lmax; $i++)
 			{
-				$b .= $this->data[$l][$i];
+				$d[$l][$i] = $this->image[$lmax-1-$i][$l];
+			}
+		}
+		$this->image = $d;
+	}
+
+	/**
+	 * @param Tile[][] $image
+	 */
+	private function createFlatImage(array $image, bool $removeBorders)
+	{
+		$this->hasBorders = !$removeBorders;
+
+		$flat = [];
+		$tileDataSize = 10;
+		$line = 0;
+		foreach($image as $imageRow)
+		{
+			for($tileDataRow = 0; $tileDataRow < $tileDataSize; $tileDataRow++)
+			{
+				if(!$removeBorders || ($tileDataRow > 0 && $tileDataRow < $tileDataSize - 1))
+				{
+					$flat[$line] = '';
+					foreach($imageRow as $tile)
+					{
+						$flat[$line] .= $removeBorders ? substr($tile->data[$tileDataRow], 1, $tileDataSize - 2) : $tile->data[$tileDataRow]; 
+					}
+					$line++;
+				}
 			}
 		}
 
-		return $b;
+		return $flat;
 	}
 
-	public function print(bool $die = false)
+	public function print(bool $die)
 	{
-		echo "<p style=\"font-family: 'Source Code Pro', monospace;\"><b>Tile $this->id:</b><br>";
-		foreach($this->data as $line)
+		if($this->hasBorders)
+		{
+			$this->printWithBorders($die);
+		}
+		else
+		{
+			$this->printWithoutBorders($die);
+		}
+	}
+
+	//for debugging only
+	public function printWithoutBorders(bool $die)
+	{
+		echo '<p style="font-family: \'Source Code Pro\', monospace; font-size:14px;"><br>';
+		$l = strlen($this->image[0]);
+		foreach($this->image as $id => $line)
 		{
 			echo "$line<br>";
 		}
-		echo "</p>";
+		echo '</p>';
+	}
 
-		if($die)
+	//for debugging only
+	public function printWithBorders(bool $die)
+	{
+		echo '<p style="font-family: \'Source Code Pro\', monospace; font-size:14px;"><br>';
+		$l = strlen($this->image[0]);
+		foreach($this->image as $id => $line)
 		{
-			die;
+			$line = str_replace('.','|', $line);
+			if($id % 10 === 0)
+			{
+				echo '<b style="color: red;">'.$line.'</b><br>';
+			}
+			else
+			{
+				for($i = 0; $i < $l; $i++)
+				{
+					$v = $line[$i];
+					echo ($i % 10 === 0) ? '<b style="color: red;">'.$v.'</b>' : $v;
+				}
+				echo '<br>';
+			}
 		}
+		echo '</p>';
 	}
 }
+

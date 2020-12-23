@@ -7,7 +7,7 @@ use Alddesign\EzMvc\System\View;
 
 <?php View::createChild("html-header", $this)->render(); ?> 
     <div class="container-fluid" id="container">
-        <div id="content" class="">
+        <div id="content" class="h3">
             <?php $solution->run(); ?>
         </div>
     </div>

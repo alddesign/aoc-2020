@@ -3,6 +3,7 @@ declare(strict_types = 1);
 namespace Alddesign\EzMvc\Solutions;
 
 use Alddesign\EzMvc\System\Helper;
+use Exception;
 
 class Solution2001 extends Solution
 {
@@ -1704,12 +1705,43 @@ class Solution2001 extends Solution
 	public function run()
 	{
 		set_time_limit(0);
+				
+		//Create the tile helper and caluclate the whole image
+		$tileHelper = new TileHelper($this::INPUT);
+		$image = $tileHelper->buildImage();
+
+		//Extract corner tiles
+		$cornerTiles = $tileHelper->getCornerTilesFromImage($image);
 		
-		//Parse input
+		$result = $cornerTiles[0]->id * $cornerTiles[1]->id * $cornerTiles[2]->id * $cornerTiles[3]->id;
+		echo "The result is <b>$result</b><br>";
+		echo '<small>The corner tiles are: <ul>';
+			echo '<li>Top left: '.$cornerTiles[0]->id.'</li>';
+			echo '<li>Top right: '.$cornerTiles[1]->id.'</li>';
+			echo '<li>Bottom right: '.$cornerTiles[2]->id.'</li>';
+			echo '<li>Bottom left: '.$cornerTiles[3]->id.'</li>';
+		echo "</ul></small>";
+	}
+
+}
+
+class TileHelper
+{
+	/** @var Tile[] $tiles*/
+	public $tiles = [];
+
+	public function __construct(array $input)
+	{
+		$this->tiles = $this->parseTiles($input);
+	}
+
+	/** @return Tile[] */
+	private function parseTiles(array $input)
+	{
 		$id = 0;
 		/** @var Tile[] $tiles */
 		$tiles = [];
-		foreach($this::INPUT as $line)
+		foreach($input as $line)
 		{
 			$tilepos = strpos($line, 'Tile');
 			if($tilepos !== false)
@@ -1723,73 +1755,125 @@ class Solution2001 extends Solution
 			}
 		}
 
-		$tileHelper = new TileHelper($tiles);
-		$cornerTiles = $tileHelper->findCornerTiles();
-
-		Helper::xout($cornerTiles);
-
-		$result = 1;
-		foreach($cornerTiles as $cornerTile)
-		{
-			$result *= $cornerTile->id;
-		}
-
-		echo sprintf('The result is <b>%s</b>.<br><small>The corner tiles are: %s, %s, %s, %s</small>', 
-		$result, $cornerTiles[0]->id, $cornerTiles[1]->id, $cornerTiles[2]->id, $cornerTiles[3]->id,);
-	}
-}
-
-class TileHelper
-{
-	/** @var Tile[] $tiles */
-	public $tiles = [];
-
-	/**
-	 * @param Tile[] $tiles
-	 */
-	public function __construct(array $tiles)
-	{
-		$this->tiles = $tiles;
+		return $tiles;
 	}
 
 	/**
+	 * @param Tile[][] $image
+	 * 
 	 * @return Tile[]
 	 */
-	public function findCornerTiles()
+	public function getCornerTilesFromImage(array $image)
 	{
-		$ex = [];
-		$result = [];
-		foreach($this->tiles as $id1 => $t1)
+		$l = count($image)-1;
+		return
+		[
+			$image[0][0],
+			$image[0][$l],
+			$image[$l][0],
+			$image[$l][$l]
+		];
+	}
+
+
+
+	/** @return Tile[][] */
+	public function buildImage()
+	{
+		$topLeftTile = $this->findTopLeftTile();
+
+		/** @var Tile[][] $img*/
+		$l = sqrt(count($this->tiles));
+		
+		$tiles = $this->tiles;
+		$img = [[]];
+		$img[0][0] = $topLeftTile;
+		unset($tiles[$topLeftTile->id]);
+
+		//Build image
+		for($r = 0; $r < $l; $r++)
 		{
-			if($id1 === 1289)
+			for($c = 0; $c < $l; $c++)
 			{
-				$t1->flip();
-				!!! HERE !!!
-			}
-			if(!in_array($id1, $ex, true))
-			{
-				$connections = 0;
-				foreach($this->tiles as $id2 => $t2)
+				if(!isset($img[$r][$c]))
 				{
-					if($id1 !== $id2)
+					/** @var Tile $lastTile */
+					$lastTile = $c === 0 ? $img[$r-1][0] : $img[$r][$c-1];
+					$compareBorder = $c === 0 ? 3 : 2;
+					
+					$found = false;
+					foreach($tiles as $id => $tile)
 					{
-						$cid = $t1->connectsTo($t2);
-						if($cid > 0)
+						if($lastTile->connectsTo($tile, $compareBorder) === $compareBorder)
 						{
-							$connections++;
-							$t1->c[$cid] = $t2->id;
+							$img[$r][$c] = $tile;
+							unset($tiles[$id]);
+							$found = true;
+							break;
 						}
 					}
+					if(!$found)
+					{
+						throw new Exception("Unable to process image as row $r, col $c");
+					}
 				}
-				if($connections === 2)
+			}			
+		}
+
+		return $img;
+	}
+
+	/**
+	 * @return Tile
+	 */
+	private function findTopLeftTile()
+	{
+		//Find top left: rotate and flip until it fits:
+		$this->topLeftTile = null;
+		for($iteration = 0; $iteration < 8; $iteration++)
+		{
+			foreach($this->tiles as $id => $tile)
+			{
+				$tile->rotateRight();
+				if($iteration === 4){$tile->flip();}
+
+				if($this->checkIfTopLeft($tile))
 				{
-					$result[] = $t1;
-					$ex[] = $t1->id;
+					return $tile;
 				}
 			}
 		}
 
-		return $result;
+		throw new Exception('Top-left tile not found.');
+	}
+
+	private function checkIfTopLeft(Tile $tile)
+	{
+		$cids = [];
+		$connections = 0;
+		foreach($this->tiles as $id2 => $tile2)
+		{
+			if($tile->id !== $id2)
+			{
+				$cid = $tile->connectsTo($tile2);
+				if($cid > 0)
+				{
+					$connections++;
+					$cids[] = $cid;
+					if($connections > 2)
+					{
+						return false;
+					}
+				}
+			}
+		}
+
+		if($connections === 2 && ($cids === [2,3] || $cids === [3,2]))
+		{
+			return true;
+		}
+
+		return false;
 	}
 
 }
@@ -1798,7 +1882,6 @@ class Tile
 {
 	public $data = [];
 	public $id = 0;
-	public $c = [];
 
 	public function __construct(int $id)
 	{
@@ -1819,24 +1902,28 @@ class Tile
 	public function rotateRight()
 	{
 		$d = $this->data;
-		for($l = 0; $l <= 9; $l++)
+		$lmax = count($d);
+		for($l = 0; $l < $lmax; $l++)
 		{
-			for($i = 0; $i <= 9; $i++)
+			for($i = 0; $i < $lmax; $i++)
 			{
-				$d[$l][$i] = $this->data[9-$i][$l];
+				$d[$l][$i] = $this->data[$lmax-1-$i][$l];
 			}
 		}
 		$this->data = $d;
 	}
 
-	public function connectsTo(Tile $tile)
+	public function connectsTo(Tile $tile, int $which = 0)
 	{
 		if($tile->id === $this->id)
 		{
 			return 0;
 		}
 
-		for($w = 1; $w <= 4; $w++)
+		$w = $which > 0 ? $which : 1;
+		$wmax = $which > 0 ? $which : 4;
+
+		for($w = 1; $w <= $wmax; $w++)
 		{
 			if($w===1){$w1=3;}
 			if($w===2){$w1=4;}
