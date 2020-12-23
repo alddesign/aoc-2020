@@ -33,8 +33,8 @@ $(document).ready(function()
 		content.append($(`<div id="canvas" width="${w}" height="${h}"></div>`));
 		canvas = document.getElementById('canvas');
 
-		render = new THREE.WebGLRenderer();
-		render.setClearColor(0xffffff, 1);
+		render = new THREE.WebGLRenderer({alpha:true});
+		render.setClearColor(0x000000, 0);
 		render.setSize(w, h);
 
 		canvas.appendChild(render.domElement);

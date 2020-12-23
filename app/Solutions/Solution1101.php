@@ -126,8 +126,10 @@ class Solution1101 extends Solution
 	/** @return int */
 	private function calculate()
 	{
+		//2261
 		$map = null;
-		$rowLen = strlen($this::INPUT[0]);
+		$l1 = count($this::INPUT);
+		$l2 = strlen($this::INPUT[0]);
 		$newMap = [];
 
 		while(true)
@@ -138,34 +140,34 @@ class Solution1101 extends Solution
 			$this->allMaps[] = $map;
 
 			//Luckily a string is just an array:
-			foreach($map as $rowId => $row)
+			for($rowId = 0; $rowId < $l1; $rowId++)
 			{
-				for($colId = 0; $colId < $rowLen; $colId++)
+				for($colId = 0; $colId < $l2; $colId++)
 				{
-					if($row[$colId] === 'L' && $this->countAdjacentSeatsOccupied($map, $rowId, $colId) === 0)
+					if($map[$rowId][$colId] === 'L' && $this->countAdjacentSeatsOccupied($map, $rowId, $colId) === 0)
 					{
 						$newMap[$rowId][$colId] = '#';
 					}
-					elseif($row[$colId] === '#' && $this->countAdjacentSeatsOccupied($map, $rowId, $colId) >= 4)
+					elseif($map[$rowId][$colId] === '#' && $this->countAdjacentSeatsOccupied($map, $rowId, $colId) >= 4)
 					{
 						$newMap[$rowId][$colId] = 'L';
 					}
 					else
 					{
-						$newMap[$rowId][$colId] = $row[$colId];
+						$newMap[$rowId][$colId] = $map[$rowId][$colId];
 					}
 				}
 			}
 
 			//Count seats
-			if($map == $newMap)
+			if($map === $newMap)
 			{
 				$finalSeatsOccupied = 0;
-				foreach($map as $row)
+				for($rowId = 0; $rowId < $l1; $rowId++)
 				{
-					for($colId = 0; $colId < $rowLen; $colId++)
+					for($colId = 0; $colId < $l2; $colId++)
 					{
-						$finalSeatsOccupied += $row[$colId] === '#' ? 1 : 0;
+						$finalSeatsOccupied += $map[$rowId][$colId] === '#' ? 1 : 0;
 					}
 				}
 
