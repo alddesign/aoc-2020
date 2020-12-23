@@ -4,6 +4,21 @@ namespace Alddesign\EzMvc\System;
 
 abstract class Helper
 {
+	private static $start = [];
+	
+	public static function start(int $index = 0)
+	{
+		self::$start[$index] = microtime(true);
+	}
+
+	public static function end(int $decPlaces = 3, int $index = 0)
+	{
+		$d = microtime(true) - self::$start[$index];
+		unset(self::$start[$index]);
+
+		return $decPlaces > 0 ? round($d, $decPlaces) : $d;
+	}
+
     /** 
 	 * A better implementation of PHP function var_dump();
 	 * 

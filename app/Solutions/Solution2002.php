@@ -1707,16 +1707,20 @@ class Solution2002 extends Solution
 		set_time_limit(0);
 		
 		//Create the tile helper and caluclate the whole image
+		Helper::start();
 		$tileHelper = new TileHelper($this::INPUT);
 		$image = $tileHelper->buildImage();
+		$d1 = Helper::end();
 
+		//Removed borders, connect, and count monsters
+		Helper::start();
 		$imageProcessor = new ImageProcessor($image);
 		$monsters = $imageProcessor->countMonsters();
-
 		$roughness = $imageProcessor->countRoughness($monsters);
+		$d2 = Helper::end();
 
 		echo "The roughness ist <b>$roughness</b><br>";
-		echo "<small>An there are $monsters sea monsters - watch out!</small>";
+		echo "<small>And there are $monsters sea monsters - watch out! Druation image generation: $d1 sec. Duration monster search: $d2 sec.</small>";
 
 		//Show them sea fuckers:
 		$imageProcessor->print(false);
@@ -1729,7 +1733,6 @@ class ImageProcessor
 	/** @var string[] $image */
 	private $image = [];
 	private $hasBorders = true;
-	private $monsterPositions = [];
 	
 	/**
 	 * @param Tile[][] $image
@@ -1763,6 +1766,7 @@ class ImageProcessor
 			throw new Exception('Cannot find monsters!');
 		}
 
+		//Ugly, but fast:
 		$max = count($this->image);
 		$found = 0;
 		for($r = 0; $r < $max; $r++)
@@ -1888,8 +1892,9 @@ class ImageProcessor
 	{
 		echo '<p style="font-family: \'Source Code Pro\', monospace; font-size:14px;"><br>';
 		$l = strlen($this->image[0]);
-		foreach($this->image as $id => $line)
+		foreach($this->image as $line)
 		{
+			$line = str_replace('O', '<b style="color: red;">O</b>', $line);
 			echo "$line<br>";
 		}
 		echo '</p>';
@@ -1902,7 +1907,6 @@ class ImageProcessor
 		$l = strlen($this->image[0]);
 		foreach($this->image as $id => $line)
 		{
-			$line = str_replace('.','|', $line);
 			if($id % 10 === 0)
 			{
 				echo '<b style="color: red;">'.$line.'</b><br>';

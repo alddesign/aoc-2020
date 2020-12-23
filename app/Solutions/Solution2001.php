@@ -1707,9 +1707,10 @@ class Solution2001 extends Solution
 		set_time_limit(0);
 				
 		//Create the tile helper and caluclate the whole image
+		Helper::start();
 		$tileHelper = new TileHelper($this::INPUT);
 		$image = $tileHelper->buildImage();
-
+		$d = Helper::end();
 		//Extract corner tiles
 		$cornerTiles = $tileHelper->getCornerTilesFromImage($image);
 		
@@ -1720,7 +1721,7 @@ class Solution2001 extends Solution
 			echo '<li>Top right: '.$cornerTiles[1]->id.'</li>';
 			echo '<li>Bottom right: '.$cornerTiles[2]->id.'</li>';
 			echo '<li>Bottom left: '.$cornerTiles[3]->id.'</li>';
-		echo "</ul></small>";
+		echo "</ul> Druation image generation: $d sec.</small>";
 	}
 
 }
@@ -1774,8 +1775,6 @@ class TileHelper
 			$image[$l][$l]
 		];
 	}
-
-
 
 	/** @return Tile[][] */
 	public function buildImage()
@@ -1896,18 +1895,19 @@ class Tile
 
 	public function flip()
 	{
-		$this->data = array_reverse($this->data);
+		//$this->data = array_reverse($this->data);
+		//this is faster:
+		$this->data = [$this->data[9],	$this->data[8],	$this->data[7],	$this->data[6],	$this->data[5],	$this->data[4],	$this->data[3],	$this->data[2],	$this->data[1],	$this->data[0]];
 	}
 
 	public function rotateRight()
 	{
 		$d = $this->data;
-		$lmax = count($d);
-		for($l = 0; $l < $lmax; $l++)
+		for($l = 0; $l <= 9; $l++)
 		{
-			for($i = 0; $i < $lmax; $i++)
+			for($i = 0; $i <= 9; $i++)
 			{
-				$d[$l][$i] = $this->data[$lmax-1-$i][$l];
+				$d[$l][$i] = $this->data[9-$i][$l];
 			}
 		}
 		$this->data = $d;
@@ -1961,20 +1961,49 @@ class Tile
 	/** @return string */
 	public function getBorder(int $side)
 	{
-		if($side === 1){ $l0 = 0; $l1 = 0; $i0 = 0; $i1 = 9; } //lt-rt
-		if($side === 2){ $l0 = 0; $l1 = 9; $i0 = 9; $i1 = 9; } //rt-rb
-		if($side === 3){ $l0 = 9; $l1 = 9; $i0 = 0; $i1 = 9; } //lb-rb
-		if($side === 4){ $l0 = 0; $l1 = 9; $i0 = 0; $i1 = 0; } //lt-lb
-		$b = '';
-		for($l = $l0; $l <= $l1; $l++)
-		{
-			for($i = $i0; $i <= $i1; $i++)
-			{
-				$b .= $this->data[$l][$i];
-			}
-		}
+		if($side === 1) //lt-rt
+		{ 
+			return $this->data[0]; 
+		} 
+		elseif($side === 2)//rt-rb
+		{ 
+			return
+			(
+				$this->data[0][9].
+				$this->data[1][9].
+				$this->data[2][9].
+				$this->data[3][9].
+				$this->data[4][9].
+				$this->data[5][9].
+				$this->data[6][9].
+				$this->data[7][9].
+				$this->data[8][9].
+				$this->data[9][9]
+			); 
+		} 
+		elseif($side === 3) //lb-rb
+		{ 
+			return $this->data[9]; 
+		} 
+		elseif($side === 4) //lt-lb
+		{ 
+			return
+			(
+				$this->data[0][0].
+				$this->data[1][0].
+				$this->data[2][0].
+				$this->data[3][0].
+				$this->data[4][0].
+				$this->data[5][0].
+				$this->data[6][0].
+				$this->data[7][0].
+				$this->data[8][0].
+				$this->data[9][0]
+			); 
+		} 
 
-		return $b;
+		throw new Exception("Invalid border $side");
+
 	}
 
 	public function print(bool $die = false)
