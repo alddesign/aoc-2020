@@ -25,7 +25,7 @@ $(document).ready(function()
 	
 	var content = $('#content');
 
-	w = window.innerWidth - 32;
+	w = window.innerWidth - 62;
 	h = window.innerHeight - 200;
 
 	function initCanvas()
@@ -146,12 +146,8 @@ $(document).ready(function()
 		render.render(scene, camera);
 	}
 
-	function start(s)
+	function start()
 	{
-		stepNo += s;
-		stepNo = stepNo < 0 ? 0 : stepNo;
-		stepNo = stepNo > 6 ? 6 : stepNo;
-
 		stop();
 
 		$('#steptext').text(`Step ${stepNo}`);
@@ -163,18 +159,24 @@ $(document).ready(function()
 
 	function initGui()
 	{
-		var prevButton = $(`<button id="prev" class="btn btn-primary">&lt;&lt; Prev.</button>`);
+		var prevButton = $(`<a href="?step=${stepNo-1}" id="prev">&lt;&lt; Prev.</a>`);
 		var stepText = $(`<span id="steptext" class="h4" style="margin: 0 10px; vertical-align: middle;">Step 0</span>`);
-		var nextButton = $(`<button id="next" class="btn btn-primary">Next &gt;&gt;</button>`);
+		var nextButton = $(`<a href="?step=${stepNo+1}" id="next">Next &gt;&gt;</a>`);
 
-		prevButton.click(function(){ start(-1); });
-		nextButton.click(function(){ start(+1); });
+		//prevButton.click(function(){ start(-1); });
+		//nextButton.click(function(){ start(+1); });
 
 		$('#container').prepend($(nextButton));
 		$('#container').prepend($(stepText));
 		$('#container').prepend($(prevButton));
 	}
 
+	//Get step no from url ?step=4
+	var urlSearch = new URLSearchParams(window.location.search);
+	stepNo = parseInt(urlSearch.get('step'));
+	stepNo = stepNo < 0 ? 0 : stepNo;
+	stepNo = stepNo > 6 ? 6 : stepNo;
+
 	initGui();
-	start(stepNo);
+	start();
 });
